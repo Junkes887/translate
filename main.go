@@ -37,7 +37,7 @@ func translateText(text string) {
 		fmt.Println(err)
 	}
 
-	client, err := translate.NewClient(ctx, option.WithAPIKey("AIzaSyC7UWk4UoMLmG2ZIdYv7des9hfHyXNsd2g"))
+	client, err := translate.NewClient(ctx, option.WithAPIKey("SUA-API-Key"))
 	if err != nil {
 		fmt.Println(err)
 	}
