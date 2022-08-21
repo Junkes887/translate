@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"cloud.google.com/go/translate"
 	"github.com/Junkes887/translate/html"
 	"github.com/Junkes887/translate/request"
+	"github.com/joho/godotenv"
 	"golang.org/x/text/language"
 	"google.golang.org/api/option"
 )
@@ -16,13 +18,18 @@ const URL string = "https://www.google.com/search?q="
 
 func main() {
 	// translateText("Hello, world!")
-	findResults("teste de velocidade", "0")
+	godotenv.Load()
+	findResults("string in JS", "0")
 }
 
 func findResults(query string, start string) {
 	resp := request.Request(makeUrl(query, start))
 
-	html.ManipulateHTML(resp.Body)
+	listPages := html.ManipulateHTML(resp.Body)
+
+	for _, page := range listPages {
+		fmt.Println("Title: " + page.Title)
+	}
 }
 
 func makeUrl(query string, start string) string {
@@ -37,7 +44,7 @@ func translateText(text string) {
 		fmt.Println(err)
 	}
 
-	client, err := translate.NewClient(ctx, option.WithAPIKey("SUA-API-Key"))
+	client, err := translate.NewClient(ctx, option.WithAPIKey(os.Getenv("API_KEY")))
 	if err != nil {
 		fmt.Println(err)
 	}
