@@ -1,59 +1,16 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"strings"
+	"log"
+	"net/http"
 
-	"cloud.google.com/go/translate"
-	"github.com/Junkes887/translate/html"
-	"github.com/Junkes887/translate/request"
+	usecases "github.com/Junkes887/translate/usecases"
 	"github.com/joho/godotenv"
-	"golang.org/x/text/language"
-	"google.golang.org/api/option"
 )
 
-const URL string = "https://www.google.com/search?q="
-
 func main() {
-	// translateText("Hello, world!")
 	godotenv.Load()
-	findResults("string in JS", "0")
-}
-
-func findResults(query string, start string) {
-	resp := request.Request(makeUrl(query, start))
-
-	listPages := html.ManipulateHTML(resp.Body)
-
-	for _, page := range listPages {
-		fmt.Println("Title: " + page.Title)
-	}
-}
-
-func makeUrl(query string, start string) string {
-	return fmt.Sprintf("%s%s&%s", URL, strings.ReplaceAll(query, " ", "+"), start)
-}
-
-func translateText(text string) {
-	ctx := context.Background()
-
-	lang, err := language.Parse("pt-br")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	client, err := translate.NewClient(ctx, option.WithAPIKey(os.Getenv("API_KEY")))
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	translations, err := client.Translate(ctx, []string{text}, lang, nil)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Printf("Text: %v\n", text)
-	fmt.Printf("Translation: %v\n", translations[0].Text)
+	http.HandleFunc("/search", usecases.GetTranslateAndSearch)
+	http.HandleFunc("/translate", usecases.GetTranslate)
+	log.Fatal(http.ListenAndServe(":8090", nil))
 }
