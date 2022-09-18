@@ -11,7 +11,7 @@ import (
 	"github.com/Junkes887/translate/request"
 )
 
-const URL_TEMPLATE string = "https://www.google.com/search?q=%s&start=%s"
+const URL_TEMPLATE string = "https://www.google.com/search?hl=en&gl=us&q=%s&start=%s"
 
 func GetTranslateAndSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.FormValue("query")
