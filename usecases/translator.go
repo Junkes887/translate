@@ -9,11 +9,12 @@ import (
 
 	"cloud.google.com/go/translate"
 	"github.com/Junkes887/translate/model"
+	"github.com/julienschmidt/httprouter"
 	"golang.org/x/text/language"
 	"google.golang.org/api/option"
 )
 
-func GetTranslate(w http.ResponseWriter, r *http.Request) {
+func GetTranslate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	text := r.FormValue("text")
 	doResponseTranslate(w, DoTranslate(text))
 }

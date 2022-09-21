@@ -9,11 +9,12 @@ import (
 	htmlHandler "github.com/Junkes887/translate/handlers"
 	"github.com/Junkes887/translate/model"
 	"github.com/Junkes887/translate/request"
+	"github.com/julienschmidt/httprouter"
 )
 
-const URL_TEMPLATE string = "https://www.google.com/search?q=%s&start=%s"
+const URL_TEMPLATE string = "https://www.google.com/search?q=%s&start=%s&gl=us&gws_rd=ssl"
 
-func GetTranslateAndSearch(w http.ResponseWriter, r *http.Request) {
+func GetTranslateAndSearch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	query := r.FormValue("query")
 	start := r.FormValue("start")
 	response := doRequest(query, start)
