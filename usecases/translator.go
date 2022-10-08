@@ -16,7 +16,8 @@ import (
 
 func GetTranslate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	text := r.FormValue("text")
-	doResponseTranslate(w, DoTranslate(text))
+	typeLang := r.FormValue("typeLang")
+	doResponseTranslate(w, DoTranslate(text, typeLang))
 }
 
 func doResponseTranslate(w http.ResponseWriter, word model.Word) {
@@ -24,10 +25,12 @@ func doResponseTranslate(w http.ResponseWriter, word model.Word) {
 	json.NewEncoder(w).Encode(word)
 }
 
-func DoTranslate(text string) model.Word {
+func DoTranslate(text string, typeLang string) model.Word {
 	ctx := context.Background()
 
-	lang, err := language.Parse("pt-br")
+	// lang, err := language.Parse("pt-br")
+	// lang, err := language.Parse("en")
+	lang, err := language.Parse(typeLang)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -45,5 +48,31 @@ func DoTranslate(text string) model.Word {
 	return model.Word{
 		Text:           text,
 		TranslatedText: translations[0].Text,
+	}
+}
+
+func DoTranslateList(texts []string, typeLang string) model.Words {
+	ctx := context.Background()
+
+	// lang, err := language.Parse("pt-br")
+	// lang, err := language.Parse("en")
+	lang, err := language.Parse(typeLang)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	client, err := translate.NewClient(ctx, option.WithAPIKey(os.Getenv("API_KEY")))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	translations, err := client.Translate(ctx, texts, lang, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return model.Words{
+		Texts:           texts,
+		TranslatedTexts: translations,
 	}
 }
