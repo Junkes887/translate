@@ -3,6 +3,7 @@ package usecases
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"strings"
 
@@ -23,7 +24,15 @@ func GetTranslateAndSearch(w http.ResponseWriter, r *http.Request, _ httprouter.
 	start := r.FormValue("start")
 	response := doRequest(query, start)
 	pageList := htmlHandler.ManipulateHTML(response.Body)
+	doFormatHtml(pageList)
 	doResponseTranslateAndSearch(w, pageList)
+}
+
+func doFormatHtml(pageList []model.Page) {
+	for i, p := range pageList {
+		pageList[i].Description = html.UnescapeString(p.Description)
+		pageList[i].Title = html.UnescapeString(p.Title)
+	}
 }
 
 func doResponseTranslateAndSearch(w http.ResponseWriter, pageList []model.Page) {

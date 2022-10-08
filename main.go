@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -17,5 +18,6 @@ func main() {
 	handlerCors := c.Handler(router)
 	router.GET("/search", usecases.GetTranslateAndSearch)
 	router.GET("/translate", usecases.GetTranslate)
+	fmt.Print("STARTED API")
 	log.Fatal(http.ListenAndServe(":8090", handlerCors))
 }
