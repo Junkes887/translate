@@ -18,6 +18,6 @@ func main() {
 	handlerCors := c.Handler(router)
 	router.GET("/search", usecases.GetTranslateAndSearch)
 	router.GET("/translate", usecases.GetTranslate)
-	fmt.Print("STARTED API")
+	fmt.Print("STARTED API IN: 8090")
 	log.Fatal(http.ListenAndServe(":8090", handlerCors))
 }
