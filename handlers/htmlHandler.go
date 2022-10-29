@@ -46,9 +46,9 @@ func ManipulateHTML(res io.ReadCloser) []model.Page {
 		})
 
 		pages = append(pages, model.Page{
-			Title:       title,
-			Description: description,
-			Link:        link,
+			OriginalTitle:       title,
+			OriginalDescription: description,
+			Link:                link,
 		})
 
 		description = ""

@@ -34,8 +34,8 @@ func GetTranslateAndSearch(w http.ResponseWriter, r *http.Request, _ httprouter.
 func doFormatHtml(pageList []model.Page) {
 	var texts []string
 	for _, p := range pageList {
-		texts = append(texts, html.UnescapeString(p.Description))
-		texts = append(texts, html.UnescapeString(p.Title))
+		texts = append(texts, html.UnescapeString(p.OriginalDescription))
+		texts = append(texts, html.UnescapeString(p.OriginalTitle))
 	}
 
 	textsTranslated := DoTranslateList(texts, PORTUGUES)
@@ -44,8 +44,8 @@ func doFormatHtml(pageList []model.Page) {
 
 	for i := 0; i < len(textsTranslated.Texts); i += 2 {
 
-		pageList[index].Description = textsTranslated.TranslatedTexts[i].Text
-		pageList[index].Title = textsTranslated.TranslatedTexts[i+1].Text
+		pageList[index].Description = html.UnescapeString(textsTranslated.TranslatedTexts[i].Text)
+		pageList[index].Title = html.UnescapeString(textsTranslated.TranslatedTexts[i+1].Text)
 
 		index++
 	}
