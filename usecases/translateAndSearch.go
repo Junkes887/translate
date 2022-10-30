@@ -17,18 +17,24 @@ const URL_TEMPLATE string = "https://www.google.com/search?q=%s&start=%s&gl=us&g
 const ENGLISH = "en"
 const PORTUGUES = "pt-br"
 
+var cache = make(map[string][]model.Page)
+
 func GetTranslateAndSearch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	//pageListMock := []model.Page{}
-	//for i := 0; i < 10; i++ {
-	//	pageListMock = append(pageListMock, model.Page{Description: "Descrição", Title: "Titúlo", Link: "http://www.google.com"})
-	//}
 	query := r.FormValue("query")
-	queryTranslated := DoTranslate(query, ENGLISH)
 	start := r.FormValue("start")
-	response := doRequest(queryTranslated.TranslatedText, start)
-	pageList := htmlHandler.ManipulateHTML(response.Body)
-	doFormatHtml(pageList)
-	doResponseTranslateAndSearch(w, pageList)
+	queryTranslated := DoTranslate(query, ENGLISH)
+	var returnValue []model.Page
+	url := makeUrl(queryTranslated.TranslatedText, start)
+	if ret, ok := cache[url]; ok {
+		fmt.Println("Requisição cacheada, retornando da memória.")
+		returnValue = ret
+	} else {
+		response := doRequest(url)
+		returnValue = htmlHandler.ManipulateHTML(response.Body)
+		doFormatHtml(returnValue)
+		cache[url] = returnValue
+	}
+	doResponseTranslateAndSearch(w, returnValue)
 }
 
 func doFormatHtml(pageList []model.Page) {
@@ -56,9 +62,9 @@ func doResponseTranslateAndSearch(w http.ResponseWriter, pageList []model.Page) 
 	json.NewEncoder(w).Encode(pageList)
 }
 
-func doRequest(query string, start string) *http.Response {
-	fmt.Print(makeUrl(query, start))
-	return request.Request(makeUrl(query, start))
+func doRequest(url string) *http.Response {
+	fmt.Println("Relizando request para: " + url)
+	return request.Request(url)
 }
 
 func makeUrl(query string, start string) string {
