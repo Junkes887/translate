@@ -41,10 +41,30 @@ func ManipulateHTML(res io.ReadCloser) []model.Page {
 				description = first.Data
 			}
 		})
+		if description == "" {
+			selectionFather.Find(".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc").Each(func(i int, s *goquery.Selection) {
+
+				first := s.Get(0).FirstChild
+
+				if first.Data == "span" {
+					s.Find("span").Each(func(i int, child *goquery.Selection) {
+						m := regexp.MustCompile("<[^>]*>")
+						outer, _ := goquery.OuterHtml(child)
+						description = m.ReplaceAllString(outer, "")
+					})
+				} else {
+					description = first.Data
+				}
+			})
+		}
+
 		selectionFather.Find(".yuRUbf > a").Each(func(i int, s *goquery.Selection) {
 			link, _ = s.Attr("href")
 		})
 
+		if title == "" || description == "" {
+			return
+		}
 		pages = append(pages, model.Page{
 			OriginalTitle:       title,
 			OriginalDescription: description,
