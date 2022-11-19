@@ -3,19 +3,31 @@ package handlers
 import (
 	"io"
 	"regexp"
+	"strings"
 
 	"github.com/Junkes887/translate/artifacts"
 	"github.com/Junkes887/translate/model"
 	"github.com/PuerkitoBio/goquery"
 )
 
-func ManipulateHTML(res io.ReadCloser) []model.Page {
+func ManipulateHTML(res io.ReadCloser) model.Page {
 	doc, err := goquery.NewDocumentFromReader(res)
 	artifacts.HandlerError(err)
 
-	var pages []model.Page
+	var sites []model.Site
 
-	var title, description, link string
+	var title, description, link, total string
+
+	doc.Find("div#result-stats").Each(func(i int, s *goquery.Selection) {
+		texto := s.Get(0).FirstChild.Data
+		pattern := regexp.MustCompile(`[0-9-,]+`)
+		firstMatchIndex := pattern.FindAllString(texto, -1)
+
+		for _, element := range firstMatchIndex {
+			total = strings.ReplaceAll(element, ",", ".")
+		}
+
+	})
 
 	doc.Find(".MjjYud").Each(func(i int, selectionFather *goquery.Selection) {
 		class := selectionFather.Get(0).Parent.Attr[0]
@@ -65,7 +77,7 @@ func ManipulateHTML(res io.ReadCloser) []model.Page {
 		if title == "" || description == "" {
 			return
 		}
-		pages = append(pages, model.Page{
+		sites = append(sites, model.Site{
 			OriginalTitle:       title,
 			OriginalDescription: description,
 			Link:                link,
@@ -74,5 +86,8 @@ func ManipulateHTML(res io.ReadCloser) []model.Page {
 		description = ""
 	})
 
-	return pages
+	return model.Page{
+		Sites: sites,
+		Total: total,
+	}
 }

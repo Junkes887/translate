@@ -9,7 +9,9 @@ import (
 
 	htmlHandler "github.com/Junkes887/translate/handlers"
 	"github.com/Junkes887/translate/model"
+	"github.com/Junkes887/translate/repository"
 	"github.com/Junkes887/translate/request"
+	"github.com/go-redis/redis"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -17,32 +19,42 @@ const URL_TEMPLATE string = "https://www.google.com/search?q=%s&start=%s&gl=us&g
 const ENGLISH = "en"
 const PORTUGUES = "pt-br"
 
-var cache = make(map[string][]model.Page)
+type Client struct {
+	DB *redis.Client
+}
 
-func GetTranslateAndSearch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (client Client) GetTranslateAndSearch(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 	query := r.FormValue("query")
 	start := r.FormValue("start")
 	queryTranslated := DoTranslate(query, ENGLISH)
-	var returnValue []model.Page
+	var returnValue model.Page
 	url := makeUrl(queryTranslated.TranslatedText, start)
-	if ret, ok := cache[url]; ok {
+
+	rep := repository.Client{
+		DB: client.DB,
+	}
+
+	page := rep.Find(url)
+
+	if page.Total != "" {
 		fmt.Println("Requisição cacheada, retornando da memória.")
-		returnValue = ret
+		returnValue = page
 	} else {
 		response := doRequest(url)
 		returnValue = htmlHandler.ManipulateHTML(response.Body)
 		doFormatHtml(returnValue)
-		cache[url] = returnValue
+		rep.Save(url, returnValue)
 	}
 	doResponseTranslateAndSearch(w, returnValue)
 }
 
-func doFormatHtml(pageList []model.Page) {
+func doFormatHtml(page model.Page) {
 	var texts []string
-	if len(pageList) == 0 {
+	if len(page.Sites) == 0 {
 		return
 	}
-	for _, p := range pageList {
+	for _, p := range page.Sites {
 		texts = append(texts, html.UnescapeString(p.OriginalDescription))
 		texts = append(texts, html.UnescapeString(p.OriginalTitle))
 	}
@@ -53,16 +65,16 @@ func doFormatHtml(pageList []model.Page) {
 
 	for i := 0; i < len(textsTranslated.Texts); i += 2 {
 
-		pageList[index].Description = html.UnescapeString(textsTranslated.TranslatedTexts[i].Text)
-		pageList[index].Title = html.UnescapeString(textsTranslated.TranslatedTexts[i+1].Text)
+		page.Sites[index].Description = html.UnescapeString(textsTranslated.TranslatedTexts[i].Text)
+		page.Sites[index].Title = html.UnescapeString(textsTranslated.TranslatedTexts[i+1].Text)
 
 		index++
 	}
 }
 
-func doResponseTranslateAndSearch(w http.ResponseWriter, pageList []model.Page) {
+func doResponseTranslateAndSearch(w http.ResponseWriter, page model.Page) {
 	w.Header().Set("Content-type", "application/json;")
-	json.NewEncoder(w).Encode(pageList)
+	json.NewEncoder(w).Encode(page)
 }
 
 func doRequest(url string) *http.Response {
